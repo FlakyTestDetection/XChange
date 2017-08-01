@@ -22,6 +22,8 @@ import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
 import org.knowm.xchange.service.trade.params.TradeHistoryParams;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 import org.slf4j.Logger;
@@ -52,7 +54,8 @@ public class CampBXTradeService extends CampBXTradeServiceRaw implements TradeSe
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public OpenOrders getOpenOrders(
+      OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
 
     MyOpenOrders myOpenOrders = getCampBXOpenOrders();
     logger.debug("myOpenOrders = {}", myOpenOrders);
@@ -60,7 +63,7 @@ public class CampBXTradeService extends CampBXTradeServiceRaw implements TradeSe
     if (!myOpenOrders.isError()) {
 
       // TODO move to adapter class
-      List<LimitOrder> orders = new ArrayList<LimitOrder>();
+      List<LimitOrder> orders = new ArrayList<>();
       for (CampBXOrder cbo : myOpenOrders.getBuy()) {
         if (cbo.isError() || cbo.isInfo()) {
           logger.debug("Skipping non-order in Buy: " + cbo);
@@ -125,6 +128,14 @@ public class CampBXTradeService extends CampBXTradeServiceRaw implements TradeSe
     }
   }
 
+  @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
+  }
+
   private String composeOrderId(String id, Order.OrderType orderType) {
 
     CampBX.OrderType type = orderType == Order.OrderType.ASK ? CampBX.OrderType.Sell : CampBX.OrderType.Buy;
@@ -133,7 +144,7 @@ public class CampBXTradeService extends CampBXTradeServiceRaw implements TradeSe
 
   private String composeOrderId(CampBX.OrderType type, String id) {
 
-    return ID_FORMAT.format(new Object[] { type, id });
+    return ID_FORMAT.format(new Object[]{type, id});
   }
 
   @Override
@@ -154,8 +165,8 @@ public class CampBXTradeService extends CampBXTradeServiceRaw implements TradeSe
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 

@@ -1,12 +1,6 @@
 package org.knowm.xchange.itbit.v1;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order.OrderType;
@@ -31,11 +25,24 @@ import org.knowm.xchange.itbit.v1.dto.trade.ItBitTradeHistory;
 import org.knowm.xchange.itbit.v1.dto.trade.ItBitUserTrade;
 import org.knowm.xchange.utils.DateUtils;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class ItBitAdapters {
 
-  private static final OpenOrders noOpenOrders = new OpenOrders(Collections.<LimitOrder> emptyList());
+  private static final OpenOrders noOpenOrders = new OpenOrders(Collections.<LimitOrder>emptyList());
   private static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
   private static final DecimalFormatSymbols CUSTOM_SYMBOLS = new DecimalFormatSymbols();
   private static Pattern TIMESTAMP_PATTERN = Pattern.compile("(.*\\.[0-9]{3})0000Z$");
@@ -79,9 +86,6 @@ public final class ItBitAdapters {
 
     Date parse;
     try {
-      /**
-       * "date" is sent with microsecond precision in UTC time. This is not supported by Java natively.
-       */
       parse = getDateFormat().parse(date.substring(0, 23) + 'Z');
     } catch (ParseException e) {
       return null;
@@ -92,7 +96,7 @@ public final class ItBitAdapters {
 
   public static Trades adaptTrades(ItBitTrades trades, CurrencyPair currencyPair) throws InvalidFormatException {
 
-    List<Trade> tradesList = new ArrayList<Trade>(trades.getCount());
+    List<Trade> tradesList = new ArrayList<>(trades.getCount());
     long lastTradeId = 0;
     for (int i = 0; i < trades.getCount(); i++) {
       ItBitTrade trade = trades.getTrades()[i];
@@ -121,11 +125,12 @@ public final class ItBitAdapters {
 
   public static List<LimitOrder> adaptOrders(List<BigDecimal[]> orders, CurrencyPair currencyPair, OrderType orderType) {
 
-    List<LimitOrder> limitOrders = new ArrayList<LimitOrder>(orders.size());
+    List<LimitOrder> limitOrders = new ArrayList<>();
 
-    for (int i = 0; i < orders.size(); i++) {
-      BigDecimal[] level = orders.get(i);
+    if(orders == null)
+      return limitOrders;
 
+    for (BigDecimal[] level : orders) {
       limitOrders.add(adaptOrder(level[1], level[0], currencyPair, null, orderType, null));
     }
 
@@ -134,14 +139,14 @@ public final class ItBitAdapters {
   }
 
   private static LimitOrder adaptOrder(BigDecimal amount, BigDecimal price, CurrencyPair currencyPair, String orderId, OrderType orderType,
-      Date timestamp) {
+                                       Date timestamp) {
 
     return new LimitOrder(orderType, amount, currencyPair, orderId, timestamp, price);
   }
 
   public static AccountInfo adaptAccountInfo(ItBitAccountInfoReturn[] info) {
 
-    List<Wallet> wallets = new ArrayList<Wallet>(info.length);
+    List<Wallet> wallets = new ArrayList<>(info.length);
     String userId = "";
 
     for (int i = 0; i < info.length; i++) {
@@ -150,7 +155,7 @@ public final class ItBitAdapters {
 
       userId = itBitAccountInfoReturn.getUserId();
 
-      List<Balance> walletContent = new ArrayList<Balance>(balances.length);
+      List<Balance> walletContent = new ArrayList<>(balances.length);
 
       for (int j = 0; j < balances.length; j++) {
         ItBitAccountBalance itBitAccountBalance = balances[j];
@@ -173,7 +178,7 @@ public final class ItBitAdapters {
       return noOpenOrders;
     }
 
-    List<LimitOrder> limitOrders = new ArrayList<LimitOrder>(orders.length);
+    List<LimitOrder> limitOrders = new ArrayList<>(orders.length);
 
     for (int i = 0; i < orders.length; i++) {
       ItBitOrder itBitOrder = orders[i];
@@ -191,7 +196,7 @@ public final class ItBitAdapters {
   public static UserTrades adaptTradeHistory(ItBitTradeHistory history) {
     List<ItBitUserTrade> itBitTrades = history.getTradingHistory();
 
-    List<UserTrade> trades = new ArrayList<UserTrade>(itBitTrades.size());
+    List<UserTrade> trades = new ArrayList<>(itBitTrades.size());
 
     for (ItBitUserTrade itBitTrade : itBitTrades) {
       String instrument = itBitTrade.getInstrument();
@@ -228,10 +233,13 @@ public final class ItBitAdapters {
     return getCryptoFormat().format(amount);
   }
 
-  public static Currency adaptCurrency(Currency currency) {
-    // ItBit uses XBT instead of BTC.
-    if ("BTC".equals(currency.getCurrencyCode())) {
-      return Currency.XBT;
+  public static CurrencyPair adaptCurrencyPairToExchange(CurrencyPair currencyPair){
+    return new CurrencyPair(adaptCurrencyToExchange(currencyPair.base), adaptCurrencyToExchange(currencyPair.counter));
+  }
+
+  public static Currency adaptCurrencyToExchange(Currency currency){
+    if (currency == Currency.BTC){
+      return currency.getIso4217Currency();
     }
     return currency;
   }

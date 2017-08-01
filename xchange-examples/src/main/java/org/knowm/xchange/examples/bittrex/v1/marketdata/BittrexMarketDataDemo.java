@@ -30,7 +30,7 @@ public class BittrexMarketDataDemo {
     exchange = ExchangeFactory.INSTANCE.createExchange(BittrexExchange.class.getName());
     MarketDataService marketDataService = exchange.getMarketDataService();
 
-    System.out.println(exchange.getExchangeSymbols().toArray());
+    System.out.println(Arrays.toString(exchange.getExchangeSymbols().toArray()));
 
     generic(marketDataService);
     raw((BittrexMarketDataServiceRaw) marketDataService);
@@ -41,9 +41,9 @@ public class BittrexMarketDataDemo {
 
     System.out.println("----------GENERIC---------");
 
-    CurrencyPair pair = CurrencyPair.BTC_XAUR;
+    CurrencyPair pair = new CurrencyPair("ETH", "BTC");
+//    CurrencyPair pair = new CurrencyPair("BTC", "USDT");
     System.out.println("Market data for " + pair + ":");
-
     Ticker ticker = marketDataService.getTicker(pair);
     System.out.println(ticker);
 

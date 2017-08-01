@@ -34,14 +34,18 @@ public class ExchangeSpecification {
 
   private int port = 80;
 
+  private int httpReadTimeout = 0; // default rescu configuration will be used if value not changed
+
   private String metaDataJsonFileOverride = null;
 
   private boolean shouldLoadRemoteMetaData = true; // default value
 
   private final String exchangeClassName;
 
-  /** arbitrary exchange params that can be set for unique cases */
-  private Map<String, Object> exchangeSpecificParameters = new HashMap<String, Object>();
+  /**
+   * arbitrary exchange params that can be set for unique cases
+   */
+  private Map<String, Object> exchangeSpecificParameters = new HashMap<>();
 
   /**
    * Dynamic binding
@@ -58,7 +62,7 @@ public class ExchangeSpecification {
    *
    * @param exchangeClass The exchange class
    */
-  public ExchangeSpecification(Class exchangeClass) {
+  public ExchangeSpecification(Class<? extends Exchange> exchangeClass) {
 
     this.exchangeClassName = exchangeClass.getCanonicalName();
   }
@@ -128,6 +132,28 @@ public class ExchangeSpecification {
   public int getPort() {
 
     return port;
+  }
+
+  /**
+   * Set the http read timeout for the connection. If not supplied the default rescu timeout will be used. Check the exchange code to see if this
+   * option has been implemented.
+   *
+   * @param milliseconds the http read timeout in milliseconds
+   */
+  public void setHttpReadTimeout(int milliseconds) {
+
+    this.httpReadTimeout = milliseconds;
+  }
+
+  /**
+   * Get the http read timeout for the connection. If the default value of zero is returned then the default rescu timeout will be applied. Check the
+   * exchange code to see if this option has been implemented.
+   *
+   * @return the http read timeout in milliseconds
+   */
+  public int getHttpReadTimeout() {
+
+    return httpReadTimeout;
   }
 
   /**
@@ -236,8 +262,6 @@ public class ExchangeSpecification {
 
   /**
    * Set an item in the arbitrary exchange-specific parameters to be passed to the exchange implementation.
-   *
-   * @param exchangeSpecificParameters a Map of named exchange-specific parameter values
    */
   public void setExchangeSpecificParametersItem(String key, Object value) {
 

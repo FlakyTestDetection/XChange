@@ -11,6 +11,8 @@ import org.knowm.xchange.btce.v3.dto.trade.BTCECancelOrderResult;
 import org.knowm.xchange.btce.v3.dto.trade.BTCECancelOrderReturn;
 import org.knowm.xchange.btce.v3.dto.trade.BTCEOpenOrdersReturn;
 import org.knowm.xchange.btce.v3.dto.trade.BTCEOrder;
+import org.knowm.xchange.btce.v3.dto.trade.BTCEOrderInfoResult;
+import org.knowm.xchange.btce.v3.dto.trade.BTCEOrderInfoReturn;
 import org.knowm.xchange.btce.v3.dto.trade.BTCEPlaceOrderResult;
 import org.knowm.xchange.btce.v3.dto.trade.BTCEPlaceOrderReturn;
 import org.knowm.xchange.btce.v3.dto.trade.BTCETradeHistoryResult;
@@ -46,7 +48,7 @@ public class BTCETradeServiceRaw extends BTCEBaseService {
 
     BTCEOpenOrdersReturn orders = btce.ActiveOrders(apiKey, signatureCreator, exchange.getNonceFactory(), pair);
     if ("no orders".equals(orders.getError())) {
-      return new HashMap<Long, BTCEOrder>();
+      return new HashMap<>();
     }
     checkResult(orders);
     return orders.getReturnValue();
@@ -132,4 +134,18 @@ public class BTCETradeServiceRaw extends BTCEBaseService {
     return btceTransHistory.getReturnValue();
   }
 
+  /**
+   * Get order info from BTCE exchange.
+   *
+   * @param orderId The ID of the order to display
+   * @return Order info.
+   */
+  public BTCEOrderInfoResult getBTCEOrderInfo(Long orderId) throws IOException {
+
+    BTCEOrderInfoReturn btceOrderInfo = btce.OrderInfo(apiKey, signatureCreator, exchange.getNonceFactory(), orderId);
+    
+    checkResult(btceOrderInfo);
+    
+    return btceOrderInfo.getReturnValue().values().iterator().next();
+  }
 }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order;
@@ -32,14 +33,14 @@ import org.knowm.xchange.therock.dto.trade.TheRockOrders;
 import org.knowm.xchange.therock.dto.trade.TheRockUserTrade;
 import org.knowm.xchange.therock.dto.trade.TheRockUserTrades;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import static org.knowm.xchange.utils.DateUtils.fromISODateString;
 
 public final class TheRockAdapters {
 
   private TheRockAdapters() {
   }
 
-  public static TheRockOrder.Side adaptSide(Order.OrderType type) {
+  public static TheRockOrder.Side adaptSide(OrderType type) {
     return type == BID ? TheRockOrder.Side.buy : TheRockOrder.Side.sell;
   }
 
@@ -71,12 +72,12 @@ public final class TheRockAdapters {
 
   public static Trades adaptTrades(TheRockTrades trades, CurrencyPair currencyPair) throws InvalidFormatException {
 
-    List<Trade> tradesList = new ArrayList<Trade>(trades.getCount());
+    List<Trade> tradesList = new ArrayList<>(trades.getCount());
     long lastTradeId = 0;
     for (int i = 0; i < trades.getCount(); i++) {
       TheRockTrade trade = trades.getTrades()[i];
       if (trade.getSide() != Side.buy && trade.getSide() != Side.sell) {
-        continue;     // process buys and sells only
+        continue; // process buys and sells only
       }
       long tradeId = trade.getId();
       if (tradeId > lastTradeId)
@@ -95,10 +96,8 @@ public final class TheRockAdapters {
     final String tradeId = String.valueOf(trade.getId());
     //return new UserTrade(trade.getSide() == Side.sell ? OrderType.ASK : BID, trade.getAmount(), currencyPair, trade.getPrice(), trade.getDate(), tradeId);
     return new UserTrade.Builder().id(tradeId).tradableAmount(trade.getAmount()).currencyPair(currencyPair).price(trade.getPrice())
-        .timestamp(trade.getDate()).orderId(String.valueOf(trade.getOrderId()))
-        .type(trade.getSide() == Side.buy ? OrderType.BID : OrderType.ASK)
-        .feeAmount(trade.getFeeAmount()).feeCurrency(trade.getFeeCurrency() == null ? null : new Currency(trade.getFeeCurrency()))
-        .build();
+        .timestamp(trade.getDate()).orderId(String.valueOf(trade.getOrderId())).type(trade.getSide() == Side.buy ? OrderType.BID : OrderType.ASK)
+        .feeAmount(trade.getFeeAmount()).feeCurrency(trade.getFeeCurrency() == null ? null : new Currency(trade.getFeeCurrency())).build();
   }
 
   public static UserTrades adaptUserTrades(TheRockUserTrades trades, CurrencyPair currencyPair) throws InvalidFormatException {
@@ -115,13 +114,25 @@ public final class TheRockAdapters {
     return new UserTrades(tradesList, lastTradeId, Trades.TradeSortType.SortByID);
   }
 
-  public static LimitOrder adaptOrder(TheRockOrder o) {
-    return new LimitOrder(adaptOrderType(o.getSide()), o.getAmount(), o.getFundId().pair,
-        Long.toString(o.getId()), null, o.getPrice());
+  public static LimitOrder adaptOrder(TheRockOrder order) {
+    Date timestamp;
+    try {
+      timestamp = order.getDate() == null ? null : fromISODateString(order.getDate());
+    } catch (InvalidFormatException e) {
+      timestamp = null;
+    }
+
+    return new LimitOrder(
+        adaptOrderType(order.getSide()),
+        order.getAmount(),
+        order.getFundId().pair,
+        Long.toString(order.getId()),
+        timestamp,
+        order.getPrice());
   }
 
-  public static Order.OrderType adaptOrderType(TheRockOrder.Side orderSide) {
-    return orderSide.equals(TheRockOrder.Side.buy) ? Order.OrderType.BID : Order.OrderType.ASK;
+  public static OrderType adaptOrderType(TheRockOrder.Side orderSide) {
+    return orderSide.equals(TheRockOrder.Side.buy) ? OrderType.BID : OrderType.ASK;
   }
 
   public static OpenOrders adaptOrders(TheRockOrders theRockOrders) {

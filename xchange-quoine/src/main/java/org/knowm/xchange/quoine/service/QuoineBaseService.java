@@ -1,9 +1,6 @@
 package org.knowm.xchange.quoine.service;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.exceptions.ExchangeException;
@@ -13,7 +10,6 @@ import org.knowm.xchange.service.BaseExchangeService;
 import org.knowm.xchange.service.BaseService;
 
 import si.mazi.rescu.HttpStatusIOException;
-import si.mazi.rescu.ParamsDigest;
 import si.mazi.rescu.RestProxyFactory;
 
 public class QuoineBaseService extends BaseExchangeService implements BaseService {
@@ -42,7 +38,7 @@ public class QuoineBaseService extends BaseExchangeService implements BaseServic
     this.secret = (String) exchange.getExchangeSpecification().getExchangeSpecificParameters().get(QuoineExchange.KEY_USER_SECRET);
 
     if (this.tokenID != null && this.secret != null) {
-      this.signatureCreator = new QuoineSignatureDigest(this.tokenID, this.secret);
+      this.signatureCreator = new QuoineSignatureDigest(this.tokenID, this.secret, exchange.getNonceFactory());
     } else {
       this.signatureCreator = null;
     }

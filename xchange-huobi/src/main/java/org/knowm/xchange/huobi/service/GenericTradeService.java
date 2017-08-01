@@ -1,7 +1,12 @@
 package org.knowm.xchange.huobi.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -19,13 +24,15 @@ import org.knowm.xchange.huobi.dto.trade.HuobiOrder;
 import org.knowm.xchange.huobi.dto.trade.HuobiPlaceOrderResult;
 import org.knowm.xchange.service.BaseExchangeService;
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
 import org.knowm.xchange.service.trade.params.TradeHistoryParams;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
 public class GenericTradeService extends BaseExchangeService implements TradeService {
 
   private final Map<CurrencyPair, Integer> coinTypes;
-  private static final OpenOrders noOpenOrders = new OpenOrders(Collections.<LimitOrder> emptyList());
+  private static final OpenOrders noOpenOrders = new OpenOrders(Collections.<LimitOrder>emptyList());
   private final TradeServiceRaw tradeServiceRaw;
 
   /**
@@ -38,7 +45,7 @@ public class GenericTradeService extends BaseExchangeService implements TradeSer
     super(exchange);
     this.tradeServiceRaw = tradeServiceRaw;
 
-    coinTypes = new HashMap<CurrencyPair, Integer>(2);
+    coinTypes = new HashMap<>(2);
     coinTypes.put(CurrencyPair.BTC_CNY, 1);
     coinTypes.put(CurrencyPair.LTC_CNY, 2);
   }
@@ -53,9 +60,10 @@ public class GenericTradeService extends BaseExchangeService implements TradeSer
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public OpenOrders getOpenOrders(
+      OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     // TODO use params for currency pair
-    List<LimitOrder> openOrders = new ArrayList<LimitOrder>();
+    List<LimitOrder> openOrders = new ArrayList<>();
     for (CurrencyPair currencyPair : exchange.getExchangeMetaData().getCurrencyPairs().keySet()) {
       HuobiOrder[] orders = tradeServiceRaw.getOrders(coinTypes.get(currencyPair));
 
@@ -64,7 +72,7 @@ public class GenericTradeService extends BaseExchangeService implements TradeSer
       }
     }
 
-    if (openOrders.size() <= 0) {
+    if (openOrders.isEmpty()) {
       return noOpenOrders;
     }
 
@@ -108,13 +116,21 @@ public class GenericTradeService extends BaseExchangeService implements TradeSer
   }
 
   @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
+  }
+
+  @Override
   public UserTrades getTradeHistory(TradeHistoryParams params) throws IOException {
     throw new NotAvailableFromExchangeException();
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 

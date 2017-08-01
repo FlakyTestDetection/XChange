@@ -4,12 +4,13 @@ import static org.knowm.xchange.dto.Order.OrderType.BID;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.bitstamp.BitstampAdapters;
 import org.knowm.xchange.bitstamp.BitstampAuthenticatedV2;
-import org.knowm.xchange.bitstamp.BitstampExchange;
 import org.knowm.xchange.bitstamp.dto.BitstampException;
 import org.knowm.xchange.bitstamp.dto.trade.BitstampOrder;
 import org.knowm.xchange.bitstamp.dto.trade.BitstampUserTransaction;
@@ -24,15 +25,20 @@ import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.trade.TradeService;
-import org.knowm.xchange.service.trade.params.*;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamCurrencyPair;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamOffset;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamPaging;
+import org.knowm.xchange.service.trade.params.TradeHistoryParams;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamsSorted;
+import org.knowm.xchange.service.trade.params.orders.DefaultOpenOrdersParamCurrencyPair;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
 /**
  * @author Matija Mazi
  */
 public class BitstampTradeService extends BitstampTradeServiceRaw implements TradeService {
-
-  private static final List<CurrencyPair> ALL_PAIRS = Arrays.asList(CurrencyPair.BTC_USD, CurrencyPair.BTC_EUR, CurrencyPair.EUR_USD);
 
   public BitstampTradeService(Exchange exchange) {
     super(exchange);
@@ -44,10 +50,8 @@ public class BitstampTradeService extends BitstampTradeServiceRaw implements Tra
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
-    // TODO use params instead of currencyPair from exchange specification
-    CurrencyPair cp = (CurrencyPair) exchange.getExchangeSpecification().getExchangeSpecificParameters().get(BitstampExchange.CURRENCY_PAIR);
-    Collection<CurrencyPair> pairs = cp != null ? Collections.singleton(cp) : ALL_PAIRS;
+  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, IOException {
+    Collection<CurrencyPair> pairs = DefaultOpenOrdersParamCurrencyPair.getPairs(params, exchange);
     List<LimitOrder> limitOrders = new ArrayList<>();
     for (CurrencyPair pair : pairs) {
       BitstampOrder[] openOrders = getBitstampOpenOrders(pair);
@@ -55,7 +59,7 @@ public class BitstampTradeService extends BitstampTradeServiceRaw implements Tra
         OrderType orderType = bitstampOrder.getType() == 0 ? OrderType.BID : OrderType.ASK;
         String id = Integer.toString(bitstampOrder.getId());
         BigDecimal price = bitstampOrder.getPrice();
-        limitOrders.add(new LimitOrder(orderType, bitstampOrder.getAmount(), pair, id, bitstampOrder.getTime(), price));
+        limitOrders.add(new LimitOrder(orderType, bitstampOrder.getAmount(), pair, id, bitstampOrder.getDatetime(), price));
       }
     }
     return new OpenOrders(limitOrders);
@@ -81,6 +85,14 @@ public class BitstampTradeService extends BitstampTradeServiceRaw implements Tra
   public boolean cancelOrder(String orderId) throws IOException, BitstampException {
 
     return cancelBitstampOrder(Integer.parseInt(orderId));
+  }
+
+  @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
   }
 
   /**
@@ -111,17 +123,17 @@ public class BitstampTradeService extends BitstampTradeServiceRaw implements Tra
   @Override
   public TradeHistoryParams createTradeHistoryParams() {
 
-    return new BitstampTradeHistoryParams(CurrencyPair.BTC_USD, 1000);
+    return new BitstampTradeHistoryParams(null, 1000);
   }
 
   @Override
   public OpenOrdersParams createOpenOrdersParams() {
-    return null;
+    return new DefaultOpenOrdersParamCurrencyPair();
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 

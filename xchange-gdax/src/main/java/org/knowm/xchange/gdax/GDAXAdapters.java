@@ -23,10 +23,7 @@ import org.knowm.xchange.dto.marketdata.Trades.TradeSortType;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
 import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
-import org.knowm.xchange.dto.trade.LimitOrder;
-import org.knowm.xchange.dto.trade.OpenOrders;
-import org.knowm.xchange.dto.trade.UserTrade;
-import org.knowm.xchange.dto.trade.UserTrades;
+import org.knowm.xchange.dto.trade.*;
 import org.knowm.xchange.gdax.dto.account.GDAXAccount;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXProduct;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXProductBook;
@@ -36,41 +33,60 @@ import org.knowm.xchange.gdax.dto.marketdata.GDAXProductTicker;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXTrade;
 import org.knowm.xchange.gdax.dto.trade.GDAXFill;
 import org.knowm.xchange.gdax.dto.trade.GDAXOrder;
+import org.knowm.xchange.utils.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GDAXAdapters {
 
-  private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-
-  static {
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-  }
+  private static Logger logger = LoggerFactory.getLogger(GDAXAdapters.class);
 
   private GDAXAdapters() {
 
   }
 
-  private static Date parseDate(String rawDate) {
+  protected static Date parseDate(final String rawDate) {
 
-    //    System.out.println("before: " + rawDate);
-    try {
-      if (rawDate.length() == 20 && rawDate.endsWith("Z")) {
-        rawDate = rawDate.substring(0, 19) + ".000Z";
-      } else if (rawDate.length() == 21) {
-        rawDate = rawDate.substring(0, 20) + "000";
-      } else if (rawDate.length() == 22) {
-        rawDate = rawDate.substring(0, 21) + "00";
-      } else if (rawDate.length() == 23) {
-        rawDate = rawDate.substring(0, 22) + "0";
-      } else {
-        rawDate = rawDate.substring(0, rawDate.length() < 23 ? rawDate.length() : 23);
+    String modified;
+    if (rawDate.length() > 23) {
+      modified = rawDate.substring(0, 23);
+    } else if (rawDate.endsWith("Z")) {
+      switch (rawDate.length()) {
+        case 20:
+          modified = rawDate.substring(0, 19) + ".000";
+          break;
+        case 22:
+          modified = rawDate.substring(0, 21) + "00";
+          break;
+        case 23:
+          modified = rawDate.substring(0, 22) + "0";
+          break;
+        default:
+          modified = rawDate;
+          break;
       }
-      //      System.out.println("after: " + rawDate);
-      //      System.out.println("");
-
-      return dateFormat.parse(rawDate);
+    } else {
+      switch (rawDate.length()) {
+        case 19:
+          modified = rawDate + ".000";
+          break;
+        case 21:
+          modified = rawDate + "00";
+          break;
+        case 22:
+          modified = rawDate + "0";
+          break;
+        default:
+          modified = rawDate;
+          break;
+      }
+    }
+    try {
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      return dateFormat.parse(modified);
     } catch (ParseException e) {
-      System.err.println("rawDate: " + rawDate);
-      e.printStackTrace();
+      logger.warn("unable to parse rawDate={} modified={}", rawDate, modified, e);
       return null;
     }
   }
@@ -98,7 +114,7 @@ public class GDAXAdapters {
 
   private static List<LimitOrder> toLimitOrderList(GDAXProductBookEntry[] levels, OrderType orderType, CurrencyPair currencyPair) {
 
-    List<LimitOrder> allLevels = new ArrayList<LimitOrder>(levels.length);
+    List<LimitOrder> allLevels = new ArrayList<>(levels.length);
     for (int i = 0; i < levels.length; i++) {
       GDAXProductBookEntry ask = levels[i];
 
@@ -110,7 +126,7 @@ public class GDAXAdapters {
   }
 
   public static Wallet adaptAccountInfo(GDAXAccount[] coinbaseExAccountInfo) {
-    List<Balance> balances = new ArrayList<Balance>(coinbaseExAccountInfo.length);
+    List<Balance> balances = new ArrayList<>(coinbaseExAccountInfo.length);
 
     for (int i = 0; i < coinbaseExAccountInfo.length; i++) {
       GDAXAccount account = coinbaseExAccountInfo[i];
@@ -122,13 +138,13 @@ public class GDAXAdapters {
   }
 
   public static OpenOrders adaptOpenOrders(GDAXOrder[] coinbaseExOpenOrders) {
-    List<LimitOrder> orders = new ArrayList<LimitOrder>(coinbaseExOpenOrders.length);
+    List<LimitOrder> orders = new ArrayList<>(coinbaseExOpenOrders.length);
 
     for (int i = 0; i < coinbaseExOpenOrders.length; i++) {
       GDAXOrder order = coinbaseExOpenOrders[i];
 
       OrderType type = order.getSide().equals("buy") ? OrderType.BID : OrderType.ASK;
-      CurrencyPair currencyPair = new CurrencyPair(order.getProductId().replace("-", "/"));
+      CurrencyPair currencyPair = new CurrencyPair(order.getProductId().replace('-', '/'));
 
       Date createdAt = parseDate(order.getCreatedAt());
 
@@ -139,20 +155,28 @@ public class GDAXAdapters {
     return new OpenOrders(orders);
   }
 
+  public static LimitOrder adaptOrder(String orderId, GDAXOrder order) {
+    OrderType type = order.getSide().equals("buy") ? OrderType.BID : OrderType.ASK;
+    CurrencyPair currencyPair = new CurrencyPair(order.getProductId().replace('-', '/'));
+
+    Date createdAt = parseDate(order.getCreatedAt());
+
+    return (new LimitOrder(type, order.getSize(), currencyPair, order.getId(), createdAt, order.getPrice()));
+  }
+
   public static UserTrades adaptTradeHistory(GDAXFill[] coinbaseExFills) {
-    List<UserTrade> trades = new ArrayList<UserTrade>(coinbaseExFills.length);
+    List<UserTrade> trades = new ArrayList<>(coinbaseExFills.length);
 
     for (int i = 0; i < coinbaseExFills.length; i++) {
       GDAXFill fill = coinbaseExFills[i];
 
-      // yes, sell means buy for Coinbase reported trades..
-      OrderType type = fill.getSide().equals("sell") ? OrderType.BID : OrderType.ASK;
+      OrderType type = fill.getSide().equals("buy") ? OrderType.BID : OrderType.ASK;
 
-      CurrencyPair currencyPair = new CurrencyPair(fill.getProductId().replace("-", "/"));
+      CurrencyPair currencyPair = new CurrencyPair(fill.getProductId().replace('-', '/'));
 
       // ToDo add fee amount
       UserTrade t = new UserTrade(type, fill.getSize(), currencyPair, fill.getPrice(), parseDate(fill.getCreatedAt()),
-          String.valueOf(fill.getTradeId()), fill.getOrderId(), null, (Currency) null);
+          String.valueOf(fill.getTradeId()), fill.getOrderId(), fill.getFee(), (Currency) null);
       trades.add(t);
     }
 
@@ -161,7 +185,7 @@ public class GDAXAdapters {
 
   public static Trades adaptTrades(GDAXTrade[] coinbaseExTrades, CurrencyPair currencyPair) {
 
-    List<Trade> trades = new ArrayList<Trade>(coinbaseExTrades.length);
+    List<Trade> trades = new ArrayList<>(coinbaseExTrades.length);
 
     for (int i = 0; i < coinbaseExTrades.length; i++) {
       GDAXTrade trade = coinbaseExTrades[i];
@@ -181,17 +205,23 @@ public class GDAXAdapters {
   }
 
   public static ExchangeMetaData adaptToExchangeMetaData(ExchangeMetaData exchangeMetaData, List<GDAXProduct> products) {
-
     Map<CurrencyPair, CurrencyPairMetaData> currencyPairs = new HashMap<>();
-    Map<Currency, CurrencyMetaData> currencies = new HashMap<>();
+    Map<Currency, CurrencyMetaData> currencies = exchangeMetaData.getCurrencies();
     for (GDAXProduct product : products) {
       BigDecimal minSize = product.getBaseMinSize().setScale(product.getQuoteIncrement().scale(), BigDecimal.ROUND_UNNECESSARY);
       BigDecimal maxSize = product.getBaseMaxSize().setScale(product.getQuoteIncrement().scale(), BigDecimal.ROUND_UNNECESSARY);
-      CurrencyPairMetaData cpmd = new CurrencyPairMetaData(null, minSize, maxSize, 8); // TODO 8 is a wild guess
+
       CurrencyPair pair = adaptCurrencyPair(product);
+
+      CurrencyPairMetaData staticMetaData = exchangeMetaData.getCurrencyPairs().get(pair);
+      int priceScale = staticMetaData == null ? 8 : staticMetaData.getPriceScale();
+      CurrencyPairMetaData cpmd = new CurrencyPairMetaData(null, minSize, maxSize, priceScale);
       currencyPairs.put(pair, cpmd);
-      currencies.put(pair.base, null);
-      currencies.put(pair.counter, null);
+
+      if (!currencies.containsKey(pair.base))
+        currencies.put(pair.base, null);
+      if (!currencies.containsKey(pair.counter))
+        currencies.put(pair.counter, null);
     }
     return new ExchangeMetaData(currencyPairs, currencies, exchangeMetaData.getPublicRateLimits(), exchangeMetaData.getPrivateRateLimits(), true);
   }

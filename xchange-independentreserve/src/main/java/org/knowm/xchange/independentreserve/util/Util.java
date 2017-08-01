@@ -1,8 +1,11 @@
 package org.knowm.xchange.independentreserve.util;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+
+import javax.xml.bind.DatatypeConverter;
 
 public class Util {
 
@@ -27,6 +30,12 @@ public class Util {
         synchronized (DATE_FORMAT) {       // SimpleDateFormat is not thread safe, therefore synchronize it
           return d == null ? null : DATE_FORMAT.format(d);
         }
+    }
+    
+    public static Date toDate(String date) {
+        Calendar cal = DatatypeConverter.parseDateTime(date);
+        cal.setTimeZone(TimeZone.getTimeZone(TIMEZONE));
+        return cal.getTime();
     }
     
 }

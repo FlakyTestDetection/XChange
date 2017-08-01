@@ -25,9 +25,14 @@ import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamCurrencyPair;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamPaging;
 import org.knowm.xchange.service.trade.params.TradeHistoryParams;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsTimeSpan;
+import org.knowm.xchange.service.trade.params.orders.DefaultOpenOrdersParamCurrencyPair;
+import org.knowm.xchange.service.trade.params.orders.OpenOrdersParamCurrencyPair;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
 /**
@@ -42,10 +47,8 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
     CurrencyPair cp = null;
     try {
       cp = (CurrencyPair) exchange.getExchangeSpecification().getExchangeSpecificParameters().get(BTCMarketsExchange.CURRENCY_PAIR);
-    } catch (ClassCastException ignored) {
-    }
-    if (cp == null) {
-      throw new IllegalArgumentException("The CURRENCY_PAIR exchange-specific parameter must be set in the exchange specification.");
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException(e);
     }
     currencyPair = cp;
   }
@@ -60,8 +63,8 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
     return placeOrder(order.getCurrencyPair(), order.getType(), order.getTradableAmount(), order.getLimitPrice(), BTCMarketsOrder.Type.Limit);
   }
 
-  private String placeOrder(CurrencyPair currencyPair, Order.OrderType orderSide, BigDecimal amount, BigDecimal price, BTCMarketsOrder.Type orderType)
-      throws IOException {
+  private String placeOrder(CurrencyPair currencyPair, Order.OrderType orderSide, BigDecimal amount, BigDecimal price,
+      BTCMarketsOrder.Type orderType) throws IOException {
     BTCMarketsOrder.Side side = orderSide == BID ? BTCMarketsOrder.Side.Bid : BTCMarketsOrder.Side.Ask;
     final BTCMarketsPlaceOrderResponse orderResponse = placeBTCMarketsOrder(currencyPair, amount, price, side, orderType);
     return Long.toString(orderResponse.getId());
@@ -73,9 +76,9 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
-    // TODO use params instead of currencyPair from exchange specification
-    BTCMarketsOrders openOrders = getBTCMarketsOpenOrders(currencyPair, 50, null);
+  public OpenOrders getOpenOrders(
+      OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    BTCMarketsOrders openOrders = getBTCMarketsOpenOrders(((OpenOrdersParamCurrencyPair) params).getCurrencyPair(), 50, null);
 
     return BTCMarketsAdapters.adaptOpenOrders(openOrders);
   }
@@ -83,6 +86,14 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
   @Override
   public boolean cancelOrder(String orderId) throws IOException, BTCMarketsException {
     return cancelBTCMarketsOrder(Long.parseLong(orderId)).getSuccess();
+  }
+
+  @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
   }
 
   @Override
@@ -96,8 +107,15 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
     if (params instanceof TradeHistoryParamsTimeSpan) {
       since = ((TradeHistoryParamsTimeSpan) params).getStartTime();
     }
-    final BTCMarketsTradeHistory response = getBTCMarketsUserTransactions(currencyPair, limit, since);
-    return BTCMarketsAdapters.adaptTradeHistory(response.getTrades(), currencyPair);
+    CurrencyPair cp = this.currencyPair;
+    if (params instanceof TradeHistoryParamCurrencyPair) {
+      final CurrencyPair paramsCp = ((TradeHistoryParamCurrencyPair) params).getCurrencyPair();
+      if (paramsCp != null) {
+        cp = paramsCp;
+      }
+    }
+    final BTCMarketsTradeHistory response = getBTCMarketsUserTransactions(cp, limit, since);
+    return BTCMarketsAdapters.adaptTradeHistory(response.getTrades(), cp);
   }
 
   @Override
@@ -107,12 +125,13 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
 
   @Override
   public OpenOrdersParams createOpenOrdersParams() {
-    return null;
+    return new DefaultOpenOrdersParamCurrencyPair(currencyPair);
   }
 
-  public static class HistoryParams implements TradeHistoryParamPaging, TradeHistoryParamsTimeSpan {
+  public static class HistoryParams implements TradeHistoryParamPaging, TradeHistoryParamsTimeSpan, TradeHistoryParamCurrencyPair {
     private Integer limit = 100;
     private Date since;
+    private CurrencyPair currencyPair;
 
     @Override
     public Integer getPageLength() {
@@ -153,11 +172,21 @@ public class BTCMarketsTradeService extends BTCMarketsTradeServiceRaw implements
     public Date getEndTime() {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public CurrencyPair getCurrencyPair() {
+      return currencyPair;
+    }
+
+    @Override
+    public void setCurrencyPair(CurrencyPair currencyPair) {
+      this.currencyPair = currencyPair;
+    }
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 }

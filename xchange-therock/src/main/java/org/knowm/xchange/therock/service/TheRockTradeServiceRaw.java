@@ -1,9 +1,5 @@
 package org.knowm.xchange.therock.service;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.Date;
-
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -15,8 +11,11 @@ import org.knowm.xchange.therock.dto.trade.TheRockOrder;
 import org.knowm.xchange.therock.dto.trade.TheRockOrders;
 import org.knowm.xchange.therock.dto.trade.TheRockTransaction;
 import org.knowm.xchange.therock.dto.trade.TheRockUserTrades;
-
 import si.mazi.rescu.RestProxyFactory;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Date;
 
 public class TheRockTradeServiceRaw extends TheRockBaseService {
 
@@ -70,24 +69,24 @@ public class TheRockTradeServiceRaw extends TheRockBaseService {
       throw new ExchangeException(e);
     }
   }
-  
-    public TheRockUserTrades getTheRockUserTrades(CurrencyPair currencyPair, Long sinceTradeId, Date after, Date before)
-            throws IOException {
-        try {
-            
-            return theRockAuthenticated.trades(new TheRock.Pair(currencyPair), exchange.getExchangeSpecification().getApiKey(),
-                    signatureCreator, exchange.getNonceFactory(), sinceTradeId, after, before, 200);
-        } catch (Throwable e) {
-            throw new ExchangeException(e);
-        }
-    }
 
-    public TheRockTransaction[] getTheRockTransactions(String type, Date after, Date before) throws IOException {
-        try {
-            return theRockAuthenticated.transactions(exchange.getExchangeSpecification().getApiKey(),
-                    signatureCreator, exchange.getNonceFactory(), type, after, before).getTransactions();
-        } catch (Throwable e) {
-            throw new ExchangeException(e);
-        }
+  public TheRockUserTrades getTheRockUserTrades(CurrencyPair currencyPair, Long sinceTradeId, Date after, Date before, int pageSize, int page) throws IOException {
+    try {
+
+      return theRockAuthenticated.trades(new TheRock.Pair(currencyPair), exchange.getExchangeSpecification().getApiKey(), signatureCreator,
+          exchange.getNonceFactory(), sinceTradeId, after, before, pageSize, page);
+    } catch (Throwable e) {
+      throw new ExchangeException(e);
     }
+  }
+
+  public TheRockTransaction[] getTheRockTransactions(String type, Date after, Date before) throws IOException {
+    try {
+      return theRockAuthenticated
+          .transactions(exchange.getExchangeSpecification().getApiKey(), signatureCreator, exchange.getNonceFactory(), type, after, before)
+          .getTransactions();
+    } catch (Throwable e) {
+      throw new ExchangeException(e);
+    }
+  }
 }

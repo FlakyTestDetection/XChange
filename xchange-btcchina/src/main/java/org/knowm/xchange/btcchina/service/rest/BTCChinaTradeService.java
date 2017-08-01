@@ -10,6 +10,7 @@ import java.util.List;
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.btcchina.BTCChinaAdapters;
 import org.knowm.xchange.btcchina.BTCChinaExchangeException;
+import org.knowm.xchange.btcchina.dto.trade.request.BTCChinaGetArchivedOrdersRequest;
 import org.knowm.xchange.btcchina.dto.trade.request.BTCChinaGetOrdersRequest;
 import org.knowm.xchange.btcchina.dto.trade.request.BTCChinaTransactionsRequest;
 import org.knowm.xchange.btcchina.dto.trade.response.BTCChinaBooleanResponse;
@@ -18,15 +19,23 @@ import org.knowm.xchange.btcchina.dto.trade.response.BTCChinaIntegerResponse;
 import org.knowm.xchange.btcchina.dto.trade.response.BTCChinaTransactionsResponse;
 import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.Order.OrderType;
+import org.knowm.xchange.dto.marketdata.Trades;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.trade.MarketOrder;
 import org.knowm.xchange.dto.trade.OpenOrders;
+import org.knowm.xchange.dto.trade.UserTrade;
 import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.service.trade.TradeService;
-import org.knowm.xchange.service.trade.params.*;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
+import org.knowm.xchange.service.trade.params.DefaultTradeHistoryParamPaging;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamPaging;
+import org.knowm.xchange.service.trade.params.TradeHistoryParams;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamsIdSpan;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamsTimeSpan;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 import org.knowm.xchange.utils.DateUtils;
 import org.slf4j.Logger;
@@ -60,14 +69,15 @@ public class BTCChinaTradeService extends BTCChinaTradeServiceRaw implements Tra
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
-    final List<LimitOrder> limitOrders = new ArrayList<LimitOrder>();
+  public OpenOrders getOpenOrders(
+      OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    final List<LimitOrder> limitOrders = new ArrayList<>();
 
     List<LimitOrder> page;
     do {
       BTCChinaGetOrdersResponse response = getBTCChinaOrders(true, BTCChinaGetOrdersRequest.ALL_MARKET, null, limitOrders.size());
 
-      page = new ArrayList<LimitOrder>();
+      page = new ArrayList<>();
       page.addAll(BTCChinaAdapters.adaptOrders(response.getResult(), null));
 
       limitOrders.addAll(page);
@@ -129,6 +139,14 @@ public class BTCChinaTradeService extends BTCChinaTradeServiceRaw implements Tra
     return ret;
   }
 
+  @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
+  }
+
   private UserTrades getUserTrades(String type, Integer limit, Integer offset, Integer since, String sincetype) throws IOException {
     log.debug("type: {}, limit: {}, offset: {}, since: {}, sincetype: {}", type, limit, offset, since, sincetype);
 
@@ -175,7 +193,37 @@ public class BTCChinaTradeService extends BTCChinaTradeServiceRaw implements Tra
       }
     }
 
-    return getUserTrades(type, limit, offset, since, sincetype);
+    final BTCChinaGetOrdersResponse response = getBTCChinaOrders(false, BTCChinaGetOrdersRequest.ALL_MARKET, limit, offset, since, true);
+    final UserTrades userTradesFromOrders = BTCChinaAdapters.adaptUserTradesFromOrders(response.getResult(), null);
+
+    final List<UserTrade> tradeHistory = new ArrayList<UserTrade>();
+    if (userTradesFromOrders != null) {
+      tradeHistory.addAll(userTradesFromOrders.getUserTrades());
+    }
+
+    if (limit == null){
+      limit = BTCChinaGetOrdersRequest.DEFAULT_LIMIT;
+    }
+
+    /**
+     * fetch archived record only if date is older than 1 week (or not provided) and trade size is still < limit
+     */
+    int currentTime = (int) DateUtils.toUnixTime(System.currentTimeMillis());
+    boolean fetchArchivedRecords = ((since == null) || ((currentTime - since) > 604800)) &&
+            (tradeHistory.size() < limit);
+
+    UserTrades userTrades = userTradesFromOrders;
+    if (fetchArchivedRecords) {
+      if (tradeHistory.size() < limit) {
+        final int remainingLimit = limit - tradeHistory.size();
+        final BTCChinaGetOrdersResponse responseArchived = getBTCChinaArchivedOrders(BTCChinaGetOrdersRequest.ALL_MARKET, remainingLimit, null, true);
+        final UserTrades userTradesFromArchivedOrders = BTCChinaAdapters.adaptUserTradesFromOrders(responseArchived.getResult(), null);
+        tradeHistory.addAll(userTradesFromArchivedOrders.getUserTrades());
+        userTrades = new UserTrades(tradeHistory, Trades.TradeSortType.SortByID);
+      }
+    }
+
+    return userTrades;
   }
 
   @Override
@@ -258,8 +306,8 @@ public class BTCChinaTradeService extends BTCChinaTradeServiceRaw implements Tra
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 

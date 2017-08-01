@@ -25,6 +25,8 @@ import org.knowm.xchange.gatecoin.dto.trade.Results.GatecoinCancelOrderResult;
 import org.knowm.xchange.gatecoin.dto.trade.Results.GatecoinOrderResult;
 import org.knowm.xchange.gatecoin.dto.trade.Results.GatecoinPlaceOrderResult;
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.service.trade.params.CancelOrderByIdParams;
+import org.knowm.xchange.service.trade.params.CancelOrderParams;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamPaging;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamTransactionId;
 import org.knowm.xchange.service.trade.params.TradeHistoryParams;
@@ -51,10 +53,11 @@ public class GatecoinTradeService extends GatecoinTradeServiceRaw implements Tra
   }
 
   @Override
-  public OpenOrders getOpenOrders(OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public OpenOrders getOpenOrders(
+      OpenOrdersParams params) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     GatecoinOrderResult openOrdersResult = getGatecoinOpenOrders();
 
-    List<LimitOrder> limitOrders = new ArrayList<LimitOrder>();
+    List<LimitOrder> limitOrders = new ArrayList<>();
     for (GatecoinOrder gatecoinOrder : openOrdersResult.getOrders()) {
       /* get side is order side (ask or bid) get type is order type, (limit or market) */
       OrderType orderType = gatecoinOrder.getSide() == 0 ? OrderType.BID : OrderType.ASK;
@@ -70,7 +73,7 @@ public class GatecoinTradeService extends GatecoinTradeServiceRaw implements Tra
   @Override
   public String placeMarketOrder(MarketOrder marketOrder) throws IOException {
 
-    String ccyPair = marketOrder.getCurrencyPair().toString().replaceAll("/", "");
+    String ccyPair = marketOrder.getCurrencyPair().toString().replace("/", "");
     GatecoinPlaceOrderResult gatecoinPlaceOrderResult;
     if (marketOrder.getType() == BID) {
       gatecoinPlaceOrderResult = placeGatecoinOrder(marketOrder.getTradableAmount(), BigDecimal.ZERO, "BID", ccyPair);
@@ -84,7 +87,7 @@ public class GatecoinTradeService extends GatecoinTradeServiceRaw implements Tra
   @Override
   public String placeLimitOrder(LimitOrder limitOrder) throws IOException {
 
-    String ccyPair = limitOrder.getCurrencyPair().toString().replaceAll("/", "");
+    String ccyPair = limitOrder.getCurrencyPair().toString().replace("/", "");
     GatecoinPlaceOrderResult gatecoinOrderResult;
     if (limitOrder.getType() == BID) {
       gatecoinOrderResult = placeGatecoinOrder(limitOrder.getTradableAmount(), limitOrder.getLimitPrice(), "BID", ccyPair);
@@ -109,6 +112,14 @@ public class GatecoinTradeService extends GatecoinTradeServiceRaw implements Tra
       return false;
     }
 
+  }
+
+  @Override
+  public boolean cancelOrder(CancelOrderParams orderParams) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+    if (orderParams instanceof CancelOrderByIdParams) {
+      cancelOrder(((CancelOrderByIdParams) orderParams).orderId);
+    }
+    return false;
   }
 
   /**
@@ -143,8 +154,8 @@ public class GatecoinTradeService extends GatecoinTradeServiceRaw implements Tra
   }
 
   @Override
-  public Collection<Order> getOrder(String... orderIds)
-      throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
+  public Collection<Order> getOrder(
+      String... orderIds) throws ExchangeException, NotAvailableFromExchangeException, NotYetImplementedForExchangeException, IOException {
     throw new NotYetImplementedForExchangeException();
   }
 

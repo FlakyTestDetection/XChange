@@ -1,19 +1,20 @@
 package org.knowm.xchange.gemini.v1.service;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-
 import org.knowm.xchange.Exchange;
+import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.gemini.v1.dto.GeminiException;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiBalancesRequest;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiBalancesResponse;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiDepositAddressRequest;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiDepositAddressResponse;
-import org.knowm.xchange.gemini.v1.dto.account.GeminiMarginInfosRequest;
-import org.knowm.xchange.gemini.v1.dto.account.GeminiMarginInfosResponse;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiWithdrawalRequest;
 import org.knowm.xchange.gemini.v1.dto.account.GeminiWithdrawalResponse;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+
+import static org.knowm.xchange.gemini.v1.GeminiUtils.convertToGeminiCcyName;
 
 public class GeminiAccountServiceRaw extends GeminiBaseService {
 
@@ -28,47 +29,51 @@ public class GeminiAccountServiceRaw extends GeminiBaseService {
   }
 
   public GeminiBalancesResponse[] getGeminiAccountInfo() throws IOException {
-
     try {
-      GeminiBalancesResponse[] balances = Gemini.balances(apiKey, payloadCreator, signatureCreator,
-          new GeminiBalancesRequest(String.valueOf(exchange.getNonceFactory().createValue())));
+      GeminiBalancesRequest request = new GeminiBalancesRequest(String.valueOf(exchange.getNonceFactory().createValue()));
+      GeminiBalancesResponse[] balances = Gemini.balances(
+          apiKey,
+          payloadCreator,
+          signatureCreator,
+          request);
       return balances;
     } catch (GeminiException e) {
       throw new ExchangeException(e);
     }
   }
 
-  public GeminiMarginInfosResponse[] getGeminiMarginInfos() throws IOException {
+  public String withdraw(Currency currency, BigDecimal amount, String address) throws IOException {
 
-    try {
-      GeminiMarginInfosResponse[] marginInfos = Gemini.marginInfos(apiKey, payloadCreator, signatureCreator,
-          new GeminiMarginInfosRequest(String.valueOf(exchange.getNonceFactory().createValue())));
-      return marginInfos;
-    } catch (GeminiException e) {
-      throw new ExchangeException(e);
-    }
+    String ccy = convertToGeminiCcyName(currency.getCurrencyCode());
+    GeminiWithdrawalRequest request = new GeminiWithdrawalRequest(
+        String.valueOf(exchange.getNonceFactory().createValue()),
+        ccy,
+        amount,
+        address);
+
+    GeminiWithdrawalResponse withdrawRepsonse = Gemini.withdraw(
+        apiKey,
+        payloadCreator,
+        signatureCreator,
+        ccy,
+        request);
+
+    return withdrawRepsonse.txHash;
   }
 
-  public String withdraw(String withdrawType, String walletSelected, BigDecimal amount, String address) throws IOException {
-
-    GeminiWithdrawalResponse[] withdrawRepsonse = Gemini.withdraw(apiKey, payloadCreator, signatureCreator,
-        new GeminiWithdrawalRequest(String.valueOf(exchange.getNonceFactory().createValue()), withdrawType, walletSelected, amount, address));
-    return withdrawRepsonse[0].getWithdrawalId();
-  }
-
-  public GeminiDepositAddressResponse requestDepositAddressRaw(String currency) throws IOException {
+  public GeminiDepositAddressResponse requestDepositAddressRaw(Currency currency) throws IOException {
     try {
-      String type = "unknown";
-      if (currency.equalsIgnoreCase("BTC")) {
-        type = "bitcoin";
-      } else if (currency.equalsIgnoreCase("LTC")) {
-        type = "litecoin";
-      } else if (currency.equalsIgnoreCase("ETH")) {
-        type = "ethereum";
-      }
+      String ccy = convertToGeminiCcyName(currency.getCurrencyCode());
 
-      GeminiDepositAddressResponse requestDepositAddressResponse = Gemini.requestDeposit(apiKey, payloadCreator, signatureCreator,
-          new GeminiDepositAddressRequest(String.valueOf(exchange.getNonceFactory().createValue()), type, "exchange", 0));
+      GeminiDepositAddressRequest exchange = new GeminiDepositAddressRequest(
+          String.valueOf(this.exchange.getNonceFactory().createValue()), ccy, null);
+
+      GeminiDepositAddressResponse requestDepositAddressResponse = Gemini.requestNewAddress(
+          apiKey,
+          payloadCreator,
+          signatureCreator,
+          ccy,
+          exchange);
       if (requestDepositAddressResponse != null) {
         return requestDepositAddressResponse;
       } else {
@@ -78,5 +83,4 @@ public class GeminiAccountServiceRaw extends GeminiBaseService {
       throw new ExchangeException(e);
     }
   }
-
 }

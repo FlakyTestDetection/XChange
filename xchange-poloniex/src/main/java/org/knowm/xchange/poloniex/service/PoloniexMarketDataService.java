@@ -43,14 +43,16 @@ public class PoloniexMarketDataService extends PoloniexMarketDataServiceRaw impl
 
     PoloniexDepth depth = null;
 
+    int depthLimit = 999999; // ~full order book
     if (args != null && args.length > 0) {
       if (args[0] instanceof Integer) {
-        int depthLimit = (Integer) args[0];
-        depth = getPoloniexDepth(currencyPair, depthLimit);
+
+        depthLimit = (Integer) args[0];
       } else {
         throw new ExchangeException("Orderbook size argument must be an Integer!");
       }
     }
+    depth = getPoloniexDepth(currencyPair, depthLimit);
     if (depth == null) {
       depth = getPoloniexDepth(currencyPair);
     }
@@ -66,14 +68,14 @@ public class PoloniexMarketDataService extends PoloniexMarketDataServiceRaw impl
 
     if (args != null) {
       switch (args.length) {
-      case 2:
-        if (args[1] != null && args[1] instanceof Long) {
-          endTime = (Long) args[1];
-        }
-      case 1:
-        if (args[0] != null && args[0] instanceof Long) {
-          startTime = (Long) args[0];
-        }
+        case 2:
+          if (args[1] != null && args[1] instanceof Long) {
+            endTime = (Long) args[1];
+          }
+        case 1:
+          if (args[0] != null && args[0] instanceof Long) {
+            startTime = (Long) args[0];
+          }
       }
     }
     PoloniexPublicTrade[] poloniexPublicTrades = null;

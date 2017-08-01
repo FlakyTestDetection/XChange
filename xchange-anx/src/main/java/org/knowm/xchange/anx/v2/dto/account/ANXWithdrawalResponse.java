@@ -8,23 +8,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public final class ANXWithdrawalResponse {
 
   /**
-   * Bitcion transaction id (in the block chain)
+   * Bitcoin transaction id (in the block chain)
    */
   private final String transactionId;
 
   /**
+   * error message
+   */
+  private final String message;
+
+  /**
    * Constructor
-   * 
+   *
    * @param transactionId
    */
-  public ANXWithdrawalResponse(@JsonProperty("trx") String transactionId) {
-
+  public ANXWithdrawalResponse(@JsonProperty("trx") String transactionId, @JsonProperty("message") String message) {
+    this.message = message;
     this.transactionId = transactionId;
   }
 
   public String getTransactionId() {
 
     return transactionId;
+  }
+
+  public String getMessage() {
+    return message;
   }
 
   @Override

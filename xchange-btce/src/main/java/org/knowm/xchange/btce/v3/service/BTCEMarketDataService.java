@@ -41,8 +41,6 @@ public class BTCEMarketDataService extends BTCEMarketDataServiceRaw implements M
   /**
    * Get market depth from exchange
    *
-   * @param tradableIdentifier The identifier to use (e.g. BTC or GOOG). First currency of the pair
-   * @param currency The currency of interest, null if irrelevant. Second currency of the pair
    * @param args Optional arguments. Exchange-specific. This implementation assumes: Integer value from 1 to 2000 -> get corresponding number of items
    * @return The OrderBook
    * @throws IOException
@@ -76,10 +74,8 @@ public class BTCEMarketDataService extends BTCEMarketDataServiceRaw implements M
   /**
    * Get recent trades from exchange
    *
-   * @param tradableIdentifier The identifier to use (e.g. BTC or GOOG)
-   * @param currency The currency of interest
    * @param args Optional arguments. This implementation assumes args[0] is integer value limiting number of trade items to get. -1 or missing -> use
-   *        default 2000 max fetch value int from 1 to 2000 -> use API v.3 to get corresponding number of trades
+   * default 2000 max fetch value int from 1 to 2000 -> use API v.3 to get corresponding number of trades
    * @return Trades object
    * @throws IOException
    */
@@ -87,20 +83,14 @@ public class BTCEMarketDataService extends BTCEMarketDataServiceRaw implements M
   public Trades getTrades(CurrencyPair currencyPair, Object... args) throws IOException {
 
     String pairs = BTCEAdapters.getPair(currencyPair);
-    int numberOfItems = -1;
-    try {
-      numberOfItems = (Integer) args[0];
-    } catch (ArrayIndexOutOfBoundsException e) {
-      // ignore, can happen if no arg given.
-    }
-    BTCETrade[] bTCETrades = null;
-
-    if (numberOfItems == -1) {
-      bTCETrades = getBTCETrades(pairs, FULL_SIZE).getTrades(BTCEAdapters.getPair(currencyPair));
-    } else {
-      bTCETrades = getBTCETrades(pairs, numberOfItems).getTrades(BTCEAdapters.getPair(currencyPair));
+    int numberOfItems = FULL_SIZE;
+    if (args != null && args.length > 0) {
+      if (args[0] instanceof Number) {
+        numberOfItems = (Integer) args[0];
+      }
     }
 
+    BTCETrade[] bTCETrades = getBTCETrades(pairs, numberOfItems).getTrades(BTCEAdapters.getPair(currencyPair));
     return BTCEAdapters.adaptTrades(bTCETrades, currencyPair);
   }
 
