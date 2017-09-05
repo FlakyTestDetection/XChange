@@ -3,6 +3,7 @@ package org.knowm.xchange.quoine.service;
 import java.io.IOException;
 
 import org.knowm.xchange.Exchange;
+import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.quoine.QuoineAuthenticated;
 import org.knowm.xchange.quoine.QuoineExchange;
@@ -34,8 +35,8 @@ public class QuoineBaseService extends BaseExchangeService implements BaseServic
 
     quoine = RestProxyFactory.createProxy(QuoineAuthenticated.class, exchange.getExchangeSpecification().getSslUri());
 
-    this.tokenID = (String) exchange.getExchangeSpecification().getExchangeSpecificParameters().get(QuoineExchange.KEY_TOKEN_ID);
-    this.secret = (String) exchange.getExchangeSpecification().getExchangeSpecificParameters().get(QuoineExchange.KEY_USER_SECRET);
+    this.tokenID = exchange.getExchangeSpecification().getApiKey();
+    this.secret = exchange.getExchangeSpecification().getSecretKey();
 
     if (this.tokenID != null && this.secret != null) {
       this.signatureCreator = new QuoineSignatureDigest(this.tokenID, this.secret, exchange.getNonceFactory());
@@ -47,5 +48,9 @@ public class QuoineBaseService extends BaseExchangeService implements BaseServic
   protected RuntimeException handleHttpError(HttpStatusIOException exception) throws IOException {
 
     throw new ExchangeException(exception.getHttpBody(), exception);
+  }
+
+  protected Integer productId(CurrencyPair currencyPair) {
+    return ((QuoineExchange) exchange).getProductId(currencyPair);
   }
 }

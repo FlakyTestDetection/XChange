@@ -69,7 +69,16 @@ public class CurrencyPair implements Comparable<CurrencyPair> {
   public static final CurrencyPair BTC_XAUR = new CurrencyPair(Currency.BTC, Currency.XAUR);
   public static final CurrencyPair BTC_IOC = new CurrencyPair(Currency.BTC, Currency.IOC);
 
+  public static final CurrencyPair BCH_USD = new CurrencyPair(Currency.BCH, Currency.USD);
+  public static final CurrencyPair BCH_AUD = new CurrencyPair(Currency.BCH, Currency.AUD);
+  public static final CurrencyPair BCH_CAD = new CurrencyPair(Currency.BCH, Currency.CAD);
+  public static final CurrencyPair BCH_GBP = new CurrencyPair(Currency.BCH, Currency.GBP);
+  public static final CurrencyPair BCH_EUR = new CurrencyPair(Currency.BCH, Currency.EUR);
+  public static final CurrencyPair BCH_BTC = new CurrencyPair(Currency.BCH, Currency.BTC);
+  public static final CurrencyPair BCH_ETH = new CurrencyPair(Currency.BCH, Currency.ETH);
+
   public static final CurrencyPair ETH_BTC = new CurrencyPair(Currency.ETH, Currency.BTC);
+  public static final CurrencyPair ETH_GBP = new CurrencyPair(Currency.ETH, Currency.GBP);
   public static final CurrencyPair ETH_USD = new CurrencyPair(Currency.ETH, Currency.USD);
   public static final CurrencyPair ETH_EUR = new CurrencyPair(Currency.ETH, Currency.EUR);
   public static final CurrencyPair ETH_JPY = new CurrencyPair(Currency.ETH, Currency.JPY);
@@ -83,7 +92,11 @@ public class CurrencyPair implements Comparable<CurrencyPair> {
 
   public static final CurrencyPair XRP_BTC = new CurrencyPair(Currency.XRP, Currency.BTC);
   public static final CurrencyPair XRP_EUR = new CurrencyPair(Currency.XRP, Currency.EUR);
+  public static final CurrencyPair XRP_USD = new CurrencyPair(Currency.XRP, Currency.USD);
+  public static final CurrencyPair XRP_GBP = new CurrencyPair(Currency.XRP, Currency.GBP);
 
+  public static final CurrencyPair LTC_AUD = new CurrencyPair(Currency.LTC, Currency.AUD);
+  public static final CurrencyPair LTC_GBP = new CurrencyPair(Currency.LTC, Currency.GBP);
   public static final CurrencyPair LTC_USD = new CurrencyPair(Currency.LTC, Currency.USD);
   public static final CurrencyPair LTC_KRW = new CurrencyPair(Currency.LTC, Currency.KRW);
   public static final CurrencyPair LTC_CNY = new CurrencyPair(Currency.LTC, Currency.CNY);
@@ -113,6 +126,9 @@ public class CurrencyPair implements Comparable<CurrencyPair> {
   public static final CurrencyPair FTC_CNY = new CurrencyPair(Currency.FTC, Currency.CNY);
   public static final CurrencyPair FTC_BTC = new CurrencyPair(Currency.FTC, Currency.BTC);
   public static final CurrencyPair FTC_LTC = new CurrencyPair(Currency.FTC, Currency.LTC);
+
+  public static final CurrencyPair XMR_BTC = new CurrencyPair(Currency.XMR, Currency.BTC);
+  public static final CurrencyPair XMR_USD = new CurrencyPair(Currency.XMR, Currency.BTC);
 
   public static final CurrencyPair XPM_USD = new CurrencyPair(Currency.XPM, Currency.USD);
   public static final CurrencyPair XPM_CNY = new CurrencyPair(Currency.XPM, Currency.CNY);
@@ -158,6 +174,12 @@ public class CurrencyPair implements Comparable<CurrencyPair> {
   public static final CurrencyPair PPC_XDC = new CurrencyPair(Currency.PPC, Currency.XDC);
   public static final CurrencyPair PPC_NMC = new CurrencyPair(Currency.PPC, Currency.NMC);
   // end
+
+  //IOTA
+  public static final CurrencyPair IOTA_USD = new CurrencyPair(Currency.IOT, Currency.USD);
+  public static final CurrencyPair IOTA_BTC = new CurrencyPair(Currency.IOT, Currency.BTC);
+  public static final CurrencyPair IOTA_ETH = new CurrencyPair(Currency.IOT, Currency.ETH);
+  //end
 
   // not real currencies, but tradable commodities (GH/s)
   public static final CurrencyPair GHs_BTC = new CurrencyPair(Currency.GHs, Currency.BTC);

@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
-import org.knowm.xchange.dto.Order;
 import org.knowm.xchange.dto.Order.OrderType;
 import org.knowm.xchange.dto.account.Balance;
 import org.knowm.xchange.dto.account.Wallet;
@@ -16,13 +15,17 @@ import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.trade.OpenOrders;
+import org.knowm.xchange.dto.trade.UserTrade;
+import org.knowm.xchange.quoine.dto.account.BitcoinAccount;
 import org.knowm.xchange.quoine.dto.account.FiatAccount;
 import org.knowm.xchange.quoine.dto.account.QuoineAccountInfo;
 import org.knowm.xchange.quoine.dto.account.QuoineTradingAccountInfo;
 import org.knowm.xchange.quoine.dto.marketdata.QuoineOrderBook;
 import org.knowm.xchange.quoine.dto.marketdata.QuoineProduct;
 import org.knowm.xchange.quoine.dto.trade.Model;
+import org.knowm.xchange.quoine.dto.trade.QuoineExecution;
 import org.knowm.xchange.quoine.dto.trade.QuoineOrdersList;
+import org.knowm.xchange.utils.DateUtils;
 
 public class QuoineAdapters {
 
@@ -39,12 +42,12 @@ public class QuoineAdapters {
 
   public static OrderBook adaptOrderBook(QuoineOrderBook quoineOrderBook, CurrencyPair currencyPair) {
 
-    List<LimitOrder> asks = createOrders(currencyPair, Order.OrderType.ASK, quoineOrderBook.getSellPriceLevels());
-    List<LimitOrder> bids = createOrders(currencyPair, Order.OrderType.BID, quoineOrderBook.getBuyPriceLevels());
+    List<LimitOrder> asks = createOrders(currencyPair, OrderType.ASK, quoineOrderBook.getSellPriceLevels());
+    List<LimitOrder> bids = createOrders(currencyPair, OrderType.BID, quoineOrderBook.getBuyPriceLevels());
     return new OrderBook(null, asks, bids);
   }
 
-  public static List<LimitOrder> createOrders(CurrencyPair currencyPair, Order.OrderType orderType, List<BigDecimal[]> orders) {
+  public static List<LimitOrder> createOrders(CurrencyPair currencyPair, OrderType orderType, List<BigDecimal[]> orders) {
 
     List<LimitOrder> limitOrders = new ArrayList<>();
     for (BigDecimal[] ask : orders) {
@@ -54,7 +57,7 @@ public class QuoineAdapters {
     return limitOrders;
   }
 
-  public static LimitOrder createOrder(CurrencyPair currencyPair, BigDecimal[] priceAndAmount, Order.OrderType orderType) {
+  public static LimitOrder createOrder(CurrencyPair currencyPair, BigDecimal[] priceAndAmount, OrderType orderType) {
 
     return new LimitOrder(orderType, priceAndAmount[1], currencyPair, "", null, priceAndAmount[0]);
   }
@@ -134,5 +137,45 @@ public class QuoineAdapters {
     }
 
     return new OpenOrders(openOrders);
+  }
+
+  public static List<Wallet> adapt(FiatAccount[] balances) {
+    List<Wallet> res = new ArrayList<>();
+    for (FiatAccount nativeBalance : balances) {
+      Balance balance = new Balance(Currency.getInstance(nativeBalance.getCurrency()), nativeBalance.getBalance());
+      res.add(new Wallet(String.valueOf(nativeBalance.getId()), balance));
+    }
+    return res;
+  }
+
+  public static List<Wallet> adapt(BitcoinAccount[] balances) {
+    List<Wallet> res = new ArrayList<>();
+    for (BitcoinAccount nativeBalance : balances) {
+      Balance balance = new Balance(Currency.getInstance(nativeBalance.getCurrency()), nativeBalance.getBalance());
+      res.add(new Wallet(String.valueOf(nativeBalance.getId()), balance));
+    }
+    return res;
+  }
+
+  public static List<UserTrade> adapt(List<QuoineExecution> executions, CurrencyPair currencyPair) {
+    List<UserTrade> res = new ArrayList<>();
+    for (QuoineExecution execution : executions) {
+      res.add(new UserTrade(
+          execution.mySide.equals("sell") ? OrderType.ASK : OrderType.BID,
+          execution.quantity,
+          currencyPair,
+          execution.price,
+          DateUtils.fromUnixTime(execution.createdAt),
+          execution.id,
+          execution.orderId,
+          null,
+          null
+      ));
+    }
+    return res;
+  }
+
+  public static String toPairString(CurrencyPair currencyPair) {
+    return currencyPair.base.getCurrencyCode() + currencyPair.counter.getCurrencyCode();
   }
 }

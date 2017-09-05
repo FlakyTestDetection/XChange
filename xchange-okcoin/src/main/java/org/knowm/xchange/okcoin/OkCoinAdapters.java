@@ -234,8 +234,9 @@ public final class OkCoinAdapters {
 
   private static LimitOrder adaptOpenOrder(OkCoinOrder order) {
 
-    return new LimitOrder(adaptOrderType(order.getType()), order.getAmount(), adaptSymbol(order.getSymbol()), String.valueOf(order.getOrderId()),
-        order.getCreateDate(), order.getPrice());
+    return new LimitOrder(adaptOrderType(order.getType()), order.getAmount(), adaptSymbol(order.getSymbol()),
+        String.valueOf(order.getOrderId()), order.getCreateDate(), order.getPrice(), order.getAveragePrice(),
+        order.getDealAmount(), adaptOrderStatus(order.getStatus()));
   }
 
   public static LimitOrder adaptOpenOrderFutures(OkCoinFuturesOrder order) {
@@ -329,7 +330,7 @@ public final class OkCoinAdapters {
   }
 
   private static Date adaptDate(long date) {
-    return DateUtils.fromMillisUtc(date * 1000L);
+    return DateUtils.fromMillisUtc(date);
   }
 
   public static List<FundingRecord> adaptFundingHistory(final OkCoinAccountRecords[] okCoinAccountRecordsList) {
@@ -341,16 +342,16 @@ public final class OkCoinAdapters {
         for (OkCoinRecords okCoinRecordEntry : depositRecord.getRecords()) {
 
           FundingRecord.Status status = null;
-          if (okCoinRecordEntry.getStatus() != null){
+          if (okCoinRecordEntry.getStatus() != null) {
             final OkCoinRecords.RechargeStatus rechargeStatus = OkCoinRecords.RechargeStatus.fromInt(okCoinRecordEntry.getStatus());
-            if (rechargeStatus != null){
+            if (rechargeStatus != null) {
               status = FundingRecord.Status.resolveStatus(rechargeStatus.getStatus());
             }
           }
 
-          fundingRecords.add(new FundingRecord(okCoinRecordEntry.getAddress(),adaptDate(okCoinRecordEntry.getDate()),
-                  depositCurrency, okCoinRecordEntry.getAmount(), null, null,
-                  FundingRecord.Type.DEPOSIT, status, null, okCoinRecordEntry.getFee(), null)
+          fundingRecords.add(new FundingRecord(okCoinRecordEntry.getAddress(), adaptDate(okCoinRecordEntry.getDate()),
+              depositCurrency, okCoinRecordEntry.getAmount(), null, null,
+              FundingRecord.Type.DEPOSIT, status, null, okCoinRecordEntry.getFee(), null)
           );
         }
       }
@@ -360,16 +361,16 @@ public final class OkCoinAdapters {
         for (OkCoinRecords okCoinRecordEntry : withdrawalRecord.getRecords()) {
 
           FundingRecord.Status status = null;
-          if (okCoinRecordEntry.getStatus() != null){
+          if (okCoinRecordEntry.getStatus() != null) {
             final OkCoinRecords.WithdrawalStatus withdrawalStatus = OkCoinRecords.WithdrawalStatus.fromInt(okCoinRecordEntry.getStatus());
-            if (withdrawalStatus != null){
+            if (withdrawalStatus != null) {
               status = FundingRecord.Status.resolveStatus(withdrawalStatus.getStatus());
             }
           }
 
-          fundingRecords.add(new FundingRecord(okCoinRecordEntry.getAddress(),adaptDate(okCoinRecordEntry.getDate()),
-                  withdrawalCurrency, okCoinRecordEntry.getAmount(), null, null,
-                  FundingRecord.Type.WITHDRAWAL, status, null, okCoinRecordEntry.getFee(), null)
+          fundingRecords.add(new FundingRecord(okCoinRecordEntry.getAddress(), adaptDate(okCoinRecordEntry.getDate()),
+              withdrawalCurrency, okCoinRecordEntry.getAmount(), null, null,
+              FundingRecord.Type.WITHDRAWAL, status, null, okCoinRecordEntry.getFee(), null)
           );
         }
       }

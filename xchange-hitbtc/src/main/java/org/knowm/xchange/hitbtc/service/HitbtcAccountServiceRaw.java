@@ -1,5 +1,10 @@
 package org.knowm.xchange.hitbtc.service;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.exceptions.ExchangeException;
@@ -11,12 +16,8 @@ import org.knowm.xchange.hitbtc.dto.account.HitbtcBalance;
 import org.knowm.xchange.hitbtc.dto.account.HitbtcBalanceResponse;
 import org.knowm.xchange.hitbtc.dto.account.HitbtcDepositAddressResponse;
 import org.knowm.xchange.hitbtc.dto.account.HitbtcPaymentBalanceResponse;
-import si.mazi.rescu.HttpStatusIOException;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import si.mazi.rescu.HttpStatusIOException;
 
 public class HitbtcAccountServiceRaw extends HitbtcBaseService {
 
@@ -40,7 +41,7 @@ public class HitbtcAccountServiceRaw extends HitbtcBaseService {
     return response.get("transaction").toString();
   }
 
-  public String transferToTrading(Currency currency, BigDecimal amount) {
+  public String transferToTrading(Currency currency, BigDecimal amount) throws HttpStatusIOException {
     InternalTransferResponse internalTransferResponse = hitbtc.transferToTrading(signatureCreator, exchange.getNonceFactory(), apiKey, amount, currency.getCurrencyCode());
     if (internalTransferResponse.transactionId == null) {
       throw new ExchangeException("transfer failed: " + internalTransferResponse);
@@ -49,7 +50,7 @@ public class HitbtcAccountServiceRaw extends HitbtcBaseService {
     }
   }
 
-  public String transferToMain(Currency currency, BigDecimal amount) {
+  public String transferToMain(Currency currency, BigDecimal amount) throws HttpStatusIOException {
     InternalTransferResponse internalTransferResponse = hitbtc.transferToMain(signatureCreator, exchange.getNonceFactory(), apiKey, amount, currency.getCurrencyCode());
     if (internalTransferResponse.transactionId == null) {
       throw new ExchangeException("transfer failed: " + internalTransferResponse);
@@ -85,7 +86,7 @@ public class HitbtcAccountServiceRaw extends HitbtcBaseService {
     }
   }
 
-  public List<TransactionResponse> transactions(Long offset, long limit, String direction) {
+  public List<TransactionResponse> transactions(Long offset, long limit, String direction) throws HttpStatusIOException {
     limit = Math.min(1000, limit);
     TransactionsResponse transactions = hitbtc.transactions(signatureCreator, exchange.getNonceFactory(), apiKey, offset, limit, direction);
     return transactions.transactions;

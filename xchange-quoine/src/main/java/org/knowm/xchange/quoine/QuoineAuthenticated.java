@@ -10,16 +10,20 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.knowm.xchange.quoine.dto.account.BitcoinAccount;
 import org.knowm.xchange.quoine.dto.account.FiatAccount;
 import org.knowm.xchange.quoine.dto.account.QuoineAccountBalance;
 import org.knowm.xchange.quoine.dto.account.QuoineTradingAccountInfo;
+import org.knowm.xchange.quoine.dto.trade.QuoineExecutionsResponse;
 import org.knowm.xchange.quoine.dto.trade.QuoineNewOrderRequestWrapper;
 import org.knowm.xchange.quoine.dto.trade.QuoineOrderDetailsResponse;
 import org.knowm.xchange.quoine.dto.trade.QuoineOrderResponse;
 import org.knowm.xchange.quoine.dto.trade.QuoineOrdersList;
+import org.knowm.xchange.quoine.dto.trade.QuoineTradesResponse;
+import org.knowm.xchange.quoine.dto.trade.QuoineTransactionsResponse;
 
 import si.mazi.rescu.ParamsDigest;
 
@@ -67,5 +71,20 @@ public interface QuoineAuthenticated extends Quoine {
   @Path("orders")
   QuoineOrdersList listOrders(@HeaderParam("X-Quoine-API-Version") int apiVersion, @HeaderParam("X-Quoine-Auth") ParamsDigest signer,
       @HeaderParam("Content-Type") String contentTyp) throws IOException;
+
+  @GET
+  @Path("executions/me")
+  QuoineExecutionsResponse executions(@HeaderParam("X-Quoine-API-Version") int apiVersion, @HeaderParam("X-Quoine-Auth") ParamsDigest signer, @HeaderParam("Content-Type") String contentType,
+      @QueryParam("product_id") int productId, @QueryParam("limit") Integer limit, @QueryParam("page") Integer page, @QueryParam("with_details") int withDetails) throws IOException;
+
+  @GET
+  @Path("trades")
+  QuoineTradesResponse trades(@HeaderParam("X-Quoine-API-Version") int apiVersion, @HeaderParam("X-Quoine-Auth") ParamsDigest signer, @HeaderParam("Content-Type") String contentType,
+      @QueryParam("funding_currency") String fundingCurrency, @QueryParam("status") String status, @QueryParam("limit") Integer limit, @QueryParam("page") Integer page) throws IOException;
+
+  @GET
+  @Path("transactions")
+  QuoineTransactionsResponse transactions(@HeaderParam("X-Quoine-API-Version") int apiVersion, @HeaderParam("X-Quoine-Auth") ParamsDigest signer, @HeaderParam("Content-Type") String contentType,
+      @QueryParam("currency") String currency, @QueryParam("limit") Integer limit, @QueryParam("page") Integer page) throws IOException;
 
 }

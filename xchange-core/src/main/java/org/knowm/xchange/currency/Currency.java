@@ -37,6 +37,7 @@ public class Currency implements Comparable<Currency> {
   public static final Currency BAM = createCurrency("BAM", "Bosnia-Herzegovina Convertible Mark", null);
   public static final Currency BBD = createCurrency("BBD", "Barbadian Dollar", null);
   public static final Currency BC = createCurrency("BC", "BlackCoin", null, "BLK");
+  public static final Currency BCH = createCurrency("BCH", "BitcoinCash", null);
   public static final Currency BLK = getInstance("BLK");
   public static final Currency BDT = createCurrency("BDT", "Bangladeshi Taka", null);
   public static final Currency BGC = createCurrency("BGC", "Aten 'Black Gold' Coin", null);
@@ -104,6 +105,7 @@ public class Currency implements Comparable<Currency> {
   public static final Currency ILS = createCurrency("ILS", "Israeli New Sheqel", null);
   public static final Currency INR = createCurrency("INR", "Indian Rupee", null);
   public static final Currency IOC = createCurrency("IOC", "I/OCoin", null);
+  public static final Currency IOT = createCurrency("IOT", "IOTA", null);
   public static final Currency IQD = createCurrency("IQD", "Iraqi Dinar", null);
   public static final Currency IRR = createCurrency("IRR", "Iranian Rial", null);
   public static final Currency ISK = createCurrency("ISK", "Icelandic Króna", null);
@@ -148,6 +150,7 @@ public class Currency implements Comparable<Currency> {
   public static final Currency MYR = createCurrency("MYR", "Malaysian Ringgit", null);
   public static final Currency MZN = createCurrency("MZN", "Mozambican Metical", null);
   public static final Currency NAD = createCurrency("NAD", "Namibian Dollar", null);
+  public static final Currency NEO = createCurrency("NEO", "NEO", null);
   public static final Currency NGN = createCurrency("NGN", "Nigerian Naira", null);
   public static final Currency NIO = createCurrency("NIO", "Nicaraguan Córdoba", null);
   public static final Currency NMC = createCurrency("NMC", "Namecoin", null);
@@ -220,6 +223,7 @@ public class Currency implements Comparable<Currency> {
   public static final Currency XAUR = createCurrency("XAUR", "Xaurum", null);
   public static final Currency XCD = createCurrency("XCD", "East Caribbean Dollar", null);
   public static final Currency XDR = createCurrency("XDR", "Special Drawing Rights", null);
+  public static final Currency XLM = createCurrency("XLM", "Stellar Lumen", null);
   public static final Currency XMR = createCurrency("XMR", "Monero", null);
   public static final Currency XOF = createCurrency("XOF", "CFA Franc BCEAO", null);
   public static final Currency XPF = createCurrency("XPF", "CFP Franc", null);
