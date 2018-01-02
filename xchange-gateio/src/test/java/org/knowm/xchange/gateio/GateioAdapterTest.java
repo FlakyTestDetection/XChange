@@ -5,11 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +16,6 @@ import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.Order.OrderType;
 import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.marketdata.OrderBook;
-import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.dto.marketdata.Trades;
 import org.knowm.xchange.dto.trade.LimitOrder;
@@ -26,8 +23,6 @@ import org.knowm.xchange.dto.trade.OpenOrders;
 import org.knowm.xchange.gateio.dto.account.GateioFunds;
 import org.knowm.xchange.gateio.dto.marketdata.GateioCurrencyPairs;
 import org.knowm.xchange.gateio.dto.marketdata.GateioDepth;
-import org.knowm.xchange.gateio.dto.marketdata.GateioTicker;
-import org.knowm.xchange.gateio.dto.marketdata.GateioTickers;
 import org.knowm.xchange.gateio.dto.marketdata.GateioTradeHistory;
 import org.knowm.xchange.gateio.dto.trade.GateioOpenOrders;
 
@@ -65,16 +60,14 @@ public class GateioAdapterTest {
     OpenOrders adaptedOpenOrders = GateioAdapters.adaptOpenOrders(openOrders, currencyPairs);
 
     List<LimitOrder> adaptedOrderList = adaptedOpenOrders.getOpenOrders();
-    assertThat(adaptedOrderList).hasSize(1);
+    assertThat(adaptedOrderList).hasSize(2);
 
     LimitOrder adaptedOrder = adaptedOrderList.get(0);
     assertThat(adaptedOrder.getType()).isEqualTo(OrderType.ASK);
-    assertThat(adaptedOrder.getOriginalAmount()).isEqualTo("0.384");
-    assertThat(adaptedOrder.getCurrencyPair()).isEqualTo(CurrencyPair.LTC_BTC);
-    assertThat(adaptedOrder.getId()).isEqualTo("12941907");
-    assertThat(adaptedOrder.getTimestamp()).isNull();
-    assertThat(adaptedOrder.getLimitPrice().doubleValue())
-        .isEqualTo(new BigDecimal("0.010176").divide(new BigDecimal("0.384"), RoundingMode.HALF_EVEN).doubleValue());
+    assertThat(adaptedOrder.getOriginalAmount()).isEqualTo(new BigDecimal("100000"));
+    assertThat(adaptedOrder.getCurrencyPair()).isEqualTo(CurrencyPair.ETH_BTC);
+    assertThat(adaptedOrder.getId()).isEqualTo("0");
+    assertThat(adaptedOrder.getLimitPrice()).isEqualTo(new BigDecimal("0.0693"));
   }
 
   @Test
@@ -112,34 +105,15 @@ public class GateioAdapterTest {
 
     Wallet wallet = GateioAdapters.adaptWallet(funds);
 
-    assertThat(wallet.getBalances()).hasSize(4);
-    assertThat(wallet.getBalance(Currency.BTC).getTotal()).isEqualTo("0.00010165");
-
-    assertThat(wallet.getBalance(Currency.BTC).getAvailable()).isEqualTo(new BigDecimal("0.00010165"));
-    assertThat(wallet.getBalance(Currency.BTC).getFrozen()).isEqualTo(BigDecimal.ZERO);
-    assertThat(wallet.getBalance(Currency.LTC).getAvailable()).isEqualTo(new BigDecimal("0.00166859"));
-    assertThat(wallet.getBalance(Currency.LTC).getFrozen()).isEqualTo(new BigDecimal("0.384"));
-  }
-
-  @Test
-  public void testAdaptTicker() throws IOException {
-
-    // Read in the JSON from the example resources
-    InputStream is = GateioAdapterTest.class.getResourceAsStream("/marketdata/example-tickers-data.json");
-
-    // Use Jackson to parse it
-    ObjectMapper mapper = new ObjectMapper();
-    GateioTickers tickers = mapper.readValue(is, GateioTickers.class);
-
-    Map<CurrencyPair, GateioTicker> tickerMap = tickers.getTickerMap();
-
-    Ticker ticker = GateioAdapters.adaptTicker(CurrencyPair.BTC_CNY, tickerMap.get(CurrencyPair.BTC_CNY));
-    assertThat(ticker.getLast()).isEqualTo("3400.01");
-    assertThat(ticker.getHigh()).isEqualTo("3497.41");
-    assertThat(ticker.getLow()).isEqualTo("3400.01");
-    assertThat(ticker.getAsk()).isEqualTo("3400.17");
-    assertThat(ticker.getBid()).isEqualTo("3400.01");
-    assertThat(ticker.getVolume()).isEqualTo("347.2045");
+    assertThat(wallet.getBalances()).hasSize(5);
+    assertThat(wallet.getBalance(Currency.BTC).getTotal()).isEqualTo("0.83357671");
+    assertThat(wallet.getBalance(Currency.BTC).getAvailable()).isEqualTo(new BigDecimal("0.83337671"));
+    assertThat(wallet.getBalance(Currency.BTC).getFrozen()).isEqualTo(new BigDecimal("0.0002"));
+    assertThat(wallet.getBalance(Currency.LTC).getAvailable()).isEqualTo(new BigDecimal("94.364"));
+    assertThat(wallet.getBalance(Currency.LTC).getFrozen()).isEqualTo(BigDecimal.ZERO);
+    assertThat(wallet.getBalance(new Currency("YAC")).getFrozen()).isEqualTo(new BigDecimal("10.01"));
+    assertThat(wallet.getBalance(new Currency("YAC")).getTotal()).isEqualTo(new BigDecimal("10.01"));
+    assertThat(wallet.getBalance(new Currency("YAC")).getAvailable()).isEqualTo(BigDecimal.ZERO);
   }
 
   @Test

@@ -1,6 +1,7 @@
 package org.knowm.xchange.gateio;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,7 +13,6 @@ import org.knowm.xchange.gateio.dto.marketdata.GateioCurrencyPairs;
 import org.knowm.xchange.gateio.dto.marketdata.GateioDepth;
 import org.knowm.xchange.gateio.dto.marketdata.GateioMarketInfoWrapper;
 import org.knowm.xchange.gateio.dto.marketdata.GateioTicker;
-import org.knowm.xchange.gateio.dto.marketdata.GateioTickers;
 import org.knowm.xchange.gateio.dto.marketdata.GateioTradeHistory;
 
 @Path("api2/1")
@@ -28,8 +28,12 @@ public interface Gateio {
   GateioCurrencyPairs getPairs() throws IOException;
 
   @GET
+  @Path("orderBooks")
+  Map<String, GateioDepth> getDepths() throws IOException;
+
+  @GET
   @Path("tickers")
-  GateioTickers getTickers() throws IOException;
+  Map<String, GateioTicker> getTickers() throws IOException;
 
   @GET
   @Path("ticker/{ident}_{currency}")

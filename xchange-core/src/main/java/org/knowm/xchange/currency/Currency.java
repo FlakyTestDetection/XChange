@@ -70,6 +70,7 @@ public class Currency implements Comparable<Currency>, Serializable {
   public static final Currency CVE = createCurrency("CVE", "Cape Verdean Escudo", null);
   public static final Currency CZK = createCurrency("CZK", "Czech Republic Koruna", null);
   public static final Currency DASH = createCurrency("DASH", "Dash", null);
+  public static final Currency DCR = createCurrency("DCR", "Decred", null);
   public static final Currency DGB = createCurrency("DGB", "DigiByte", null);
   public static final Currency DJF = createCurrency("DJF", "Djiboutian Franc", null);
   public static final Currency DKK = createCurrency("DKK", "Danish Krone", null);
@@ -190,6 +191,7 @@ public class Currency implements Comparable<Currency>, Serializable {
   public static final Currency SAR = createCurrency("SAR", "Saudi Riyal", null);
   public static final Currency SBC = createCurrency("SBC", "Stablecoin", null);
   public static final Currency SBD = createCurrency("SBD", "Solomon Islands Dollar", null);
+  public static final Currency SC = createCurrency("SC", "Siacoin", null);
   public static final Currency SCR = createCurrency("SCR", "Seychellois Rupee", null);
   public static final Currency SDG = createCurrency("SDG", "Sudanese Pound", null);
   public static final Currency SEK = createCurrency("SEK", "Swedish Krona", null);
@@ -246,6 +248,26 @@ public class Currency implements Comparable<Currency>, Serializable {
   public static final Currency ZMK = createCurrency("ZMK", "Zambian Kwacha", null);
   public static final Currency ZRC = createCurrency("ZRC", "ziftrCOIN", null);
   public static final Currency ZWL = createCurrency("ZWL", "Zimbabwean Dollar", null);
+
+  //Cryptos
+  public static final Currency BNB = createCurrency("BNB", "Binance Coin", null);
+  public static final Currency QSP = createCurrency("QSP", "Quantstamp", null);
+  public static final Currency IOTA = createCurrency("IOTA", "Iota", null);
+  public static final Currency YOYO = createCurrency("YOYO", "Yoyow", null);
+  public static final Currency BTS = createCurrency("BTS", "Bitshare", null);
+  public static final Currency ICX = createCurrency("ICX", "Icon", null);
+  public static final Currency MCO = createCurrency("MCO", "Monaco", null);
+  public static final Currency CND = createCurrency("CND", "Cindicator", null);
+  public static final Currency XVG = createCurrency("XVG", "Verge", null);
+  public static final Currency POE = createCurrency("POE", "Po.et", null);
+  public static final Currency TRX = createCurrency("TRX", "Tron", null);
+  public static final Currency ADA = createCurrency("ADA", "Cardano", null);
+  public static final Currency FUN = createCurrency("FUN", "FunFair", null);
+  public static final Currency HSR = createCurrency("HSR", "Hshare", null);
+  public static final Currency LEND = createCurrency("LEND", "ETHLend", null);
+  public static final Currency ELF = createCurrency("ELF", "aelf", null);
+  public static final Currency STORJ = createCurrency("STORJ", "Storj", null);
+  public static final Currency MOD = createCurrency("MOD", "Modum", null);
 
   /**
    * Gets the set of available currencies.
@@ -437,13 +459,13 @@ public class Currency implements Comparable<Currency>, Serializable {
     }
     Currency other = (Currency) obj;
 
-    return attributes == other.attributes;
+    return attributes.equals(other.attributes);
   }
 
   @Override
   public int compareTo(Currency o) {
 
-    if (attributes == o.attributes)
+    if (attributes.equals(o.attributes))
       return 0;
 
     int comparison = code.compareTo(o.code);
@@ -510,5 +532,28 @@ public class Currency implements Comparable<Currency>, Serializable {
         this.unicode = commonCode;
       }
     }
+
+    @Override
+    public int hashCode() {
+      return commonCode.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      CurrencyAttributes other = (CurrencyAttributes) obj;
+      if (commonCode == null) {
+        if (other.commonCode != null)
+          return false;
+      } else if (!commonCode.equals(other.commonCode))
+        return false;
+      return true;
+    }
+
   }
 }

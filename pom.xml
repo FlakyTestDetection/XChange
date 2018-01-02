@@ -5,7 +5,7 @@
 
     <groupId>org.knowm.xchange</groupId>
     <artifactId>xchange-parent</artifactId>
-    <version>4.3.2-SNAPSHOT</version>
+    <version>4.3.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>XChange</name>
@@ -86,6 +86,7 @@
 
     <modules>
         <module>xchange-anx</module>
+        <module>xchange-acx</module>
         <module>xchange-binance</module>
         <module>xchange-bitbay</module>
         <module>xchange-bitcoinaverage</module>
@@ -95,6 +96,8 @@
         <module>xchange-bitcoinium</module>
         <module>xchange-bitcurex</module>
         <module>xchange-bitfinex</module>
+        <module>xchange-bitmex</module>
+        <module>xchange-bitflyer</module>
         <module>xchange-bitmarket</module>
         <module>xchange-bitso</module>
         <module>xchange-bitstamp</module>
@@ -127,6 +130,7 @@
         <module>xchange-itbit</module>
         <module>xchange-independentreserve</module>
         <module>xchange-koineks</module>
+        <module>xchange-koinim</module>
         <module>xchange-kraken</module>
         <module>xchange-lakebtc</module>
         <module>xchange-liqui</module>
@@ -198,6 +202,7 @@
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections</artifactId>
                 <version>${version.reflections}</version>
+                <scope>test</scope>
             </dependency>
 
             <!-- PowerMockito for unit tests -->

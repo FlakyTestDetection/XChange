@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.knowm.xchange</groupId>
         <artifactId>xchange-parent</artifactId>
-        <version>4.3.2-SNAPSHOT</version>
+        <version>4.3.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>xchange-examples</artifactId>
@@ -54,6 +54,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>xchange-wex</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- XChange Binance exchange support -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>xchange-binance</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- XChange Bitstamp exchange support -->
@@ -108,6 +114,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>xchange-bitfinex</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- XChange Bitfmex support -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>xchange-bitmex</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- XChange Bitcoinium support -->
@@ -331,6 +343,21 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>xchange-gateio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>xchange-koinim</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>xchange-acx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>xchange-bitflyer</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

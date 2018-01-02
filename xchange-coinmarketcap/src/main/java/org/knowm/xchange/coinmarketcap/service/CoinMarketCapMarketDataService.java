@@ -97,12 +97,12 @@ public class CoinMarketCapMarketDataService extends CoinMarketCapMarketDataServi
   }
 
   @Override
-  public OrderBook getOrderBook(CurrencyPair currencyPair, Object... objects) {
+  public OrderBook getOrderBook(CurrencyPair currencyPair, Object... objects) throws IOException {
     throw new NotAvailableFromExchangeException();
   }
 
   @Override
-  public Trades getTrades(CurrencyPair currencyPair, Object... objects) {
+  public Trades getTrades(CurrencyPair currencyPair, Object... objects) throws IOException {
     throw new NotAvailableFromExchangeException();
   }
 
